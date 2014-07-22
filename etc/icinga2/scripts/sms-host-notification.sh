@@ -16,19 +16,24 @@ echo "" >>$TMPFILE
 
 DURATION_MIN=$[$DURATION_SEC/60]
 
-cat <<TEMPLATE | iconv -t ISO-8859-15 >>$TMPFILE
-$NOTIFICATIONTYPE - $HOSTDISPLAYNAME is $HOSTSTATE for ${DURATION_MIN}m
-($HOSTOUTPUT)
-TEMPLATE
+echo "$NOTIFICATIONTYPE - $HOSTDISPLAYNAME is $HOSTSTATE for ${DURATION_MIN}m" | \
+	iconv -t ISO-8859-15 >>$TMPFILE
 
-chmod 660 $TMPFILE
+if [ -n "$NOTIFICATIONCOMMENT" ]; then
+	echo "[$NOTIFICATIONAUTHORNAME] ${NOTIFICATIONCOMMENT:0:100}" | \
+		iconv -t ISO-8859-15 >>$TMPFILE
+fi
+
+echo "(${HOSTOUTPUT:0:100})" | iconv -t ISO-8859-15 >>$TMPFILE
+
 chgrp $SMSTOOLS_GROUP $TMPFILE
+chmod 660 $TMPFILE
 
-MAXRENAME=10
+RETRY=10
 while ! mv -n $TMPFILE $SMSTOOLS_OUTGOING_DIR; do
 	# target file seems to already exist
 
-	if [ $MAXRENAME -le 0 ]; then
+	if [ $RETRY -le 0 ]; then
 		echo "can't write to target directory"
 		exit 1
 	fi
@@ -37,6 +42,5 @@ while ! mv -n $TMPFILE $SMSTOOLS_OUTGOING_DIR; do
 	mv -f $TMPFILE $NEWTMP
 	TMPFILE=$NEWTMP
 
-	MAXRENAME=$[$MAXRENAME-1]
+	RETRY=$[$RETRY-1]
 done
-
