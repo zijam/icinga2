@@ -30,6 +30,7 @@
 #include "base/convert.hpp"
 #include "base/scriptglobal.hpp"
 #include "base/process.hpp"
+#include "base/gc.hpp"
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -124,6 +125,8 @@ void Application::Exit(int rc)
 
 void Application::InitializeBase(void)
 {
+	GC::Initialize();
+
 #ifdef _WIN32
 	/* disable GUI-based error messages for LoadLibrary() */
 	SetErrorMode(SEM_FAILCRITICALERRORS);

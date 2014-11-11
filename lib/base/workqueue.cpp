@@ -23,6 +23,7 @@
 #include "base/convert.hpp"
 #include "base/application.hpp"
 #include "base/exception.hpp"
+#include "base/gc.hpp"
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread/tss.hpp>
@@ -69,7 +70,7 @@ void WorkQueue::Enqueue(const Task& task, bool allowInterleaved)
 
 	if (!m_Spawned) {
 		for (int i = 0; i < m_ThreadCount; i++) {
-			m_Threads.create_thread(boost::bind(&WorkQueue::WorkerThreadProc, this));
+			m_Threads.create_thread(GC::WrapThread(boost::bind(&WorkQueue::WorkerThreadProc, this)));
 		}
 
 		m_Spawned = true;
