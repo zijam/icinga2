@@ -29,6 +29,7 @@
 #include "base/scriptglobal.hpp"
 #include "base/initialize.hpp"
 #include "base/statsfunction.hpp"
+#include "base/objectdatabase.hpp"
 
 using namespace icinga;
 
@@ -124,7 +125,8 @@ void IcingaApplication::OnShutdown(void)
 
 void IcingaApplication::DumpProgramState(void)
 {
-	DynamicObject::DumpObjects(GetStatePath());
+	ObjectDatabase odb(GetDbPath());
+	odb.SaveObjectsState();
 }
 
 IcingaApplication::Ptr IcingaApplication::GetInstance(void)

@@ -232,6 +232,7 @@ int Main(void)
 		}
 	}
 
+	Application::DeclareDbPath(Application::GetLocalStateDir() + "/lib/icinga2/icinga2.db");
 	Application::DeclareStatePath(Application::GetLocalStateDir() + "/lib/icinga2/icinga2.state");
 	Application::DeclareObjectsPath(Application::GetLocalStateDir() + "/cache/icinga2/icinga2.debug");
 	Application::DeclareVarsPath(Application::GetLocalStateDir() + "/cache/icinga2/icinga2.vars");

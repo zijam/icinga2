@@ -97,10 +97,9 @@ static void IncludeNonLocalZone(const String& zonePath)
 }
 
 static bool LoadConfigFiles(const boost::program_options::variables_map& vm, const String& appType,
-    const String& objectsFile = String(), const String& varsfile = String())
+    const String& varsfile = String())
 {
-	if (!objectsFile.IsEmpty())
-		ConfigCompilerContext::GetInstance()->OpenObjectsFile(objectsFile);
+	ConfigCompilerContext::GetInstance()->OpenObjectsFile();
 
 	if (vm.count("config") > 0) {
 		BOOST_FOREACH(const String& configPath, vm["config"].as<std::vector<std::string> >()) {
@@ -339,7 +338,7 @@ int DaemonCommand::Run(const po::variables_map& vm, const std::vector<std::strin
 		}
 	}
 
-	if (!LoadConfigFiles(vm, appType, Application::GetObjectsPath(), Application::GetVarsPath()))
+	if (!LoadConfigFiles(vm, appType, Application::GetVarsPath()))
 		return EXIT_FAILURE;
 
 	if (vm.count("validate")) {

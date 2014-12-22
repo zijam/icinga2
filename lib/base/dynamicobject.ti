@@ -58,7 +58,7 @@ abstract class DynamicObject
 	[enum] HAMode ha_mode (HAMode);
 	[protected] Dictionary::Ptr extensions;
 
-	[protected] bool state_loaded;
+	bool state_loaded;
 };
 
 }

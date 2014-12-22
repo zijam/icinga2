@@ -21,8 +21,11 @@
 #define CONFIGCOMPILERCONTEXT_H
 
 #include "config/i2-config.hpp"
+#include "config/expression.hpp"
 #include "base/stdiostream.hpp"
 #include "base/dictionary.hpp"
+#include "base/workqueue.hpp"
+#include "base/objectdatabase.hpp"
 #include <boost/thread/mutex.hpp>
 
 namespace icinga
@@ -34,17 +37,19 @@ namespace icinga
 class I2_CONFIG_API ConfigCompilerContext
 {
 public:
-	void OpenObjectsFile(const String& filename);
-	void WriteObject(const Dictionary::Ptr& object);
+	void OpenObjectsFile(void);
+	void WriteObject(const DynamicObject::Ptr& object, const DebugHint& dhint);
 	void FinishObjectsFile(void);
 
 	static ConfigCompilerContext *GetInstance(void);
 
 private:
-	String m_ObjectsPath;
-	StdioStream::Ptr m_ObjectsFP;
+	boost::shared_ptr<WorkQueue> m_WorkQueue;
+	boost::shared_ptr<ObjectDatabase> m_Database;
 
 	mutable boost::mutex m_Mutex;
+
+	void InternalWriteObject(const DynamicObject::Ptr& object, const DebugHint& dhint);
 };
 
 }

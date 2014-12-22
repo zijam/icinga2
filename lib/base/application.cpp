@@ -1014,6 +1014,26 @@ void Application::DeclareIncludeConfDir(const String& path)
 }
 
 /**
+* Retrieves the path for the database file.
+*
+* @returns The path.
+*/
+String Application::GetDbPath(void)
+{
+	return ScriptGlobal::Get("DbPath", &Empty);
+}
+
+/**
+* Sets the path for the database file.
+*
+* @param path The new path.
+*/
+void Application::DeclareDbPath(const String& path)
+{
+	ScriptGlobal::Set("DbPath", path);
+}
+
+/**
  * Retrieves the path for the state file.
  *
  * @returns The path.

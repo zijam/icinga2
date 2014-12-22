@@ -26,11 +26,11 @@ set(base_SOURCES
   application.cpp application-version.cpp application.thpp array.cpp array-script.cpp boolean.cpp boolean-script.cpp console.cpp context.cpp
   convert.cpp debuginfo.cpp dictionary.cpp dictionary-script.cpp dynamicobject.cpp dynamicobject.thpp dynamictype.cpp
   exception.cpp fifo.cpp filelogger.cpp filelogger.thpp initialize.cpp json.cpp logger.cpp logger.thpp
-  netstring.cpp networkstream.cpp number.cpp number-script.cpp object.cpp object-script.cpp primitivetype.cpp process.cpp
+  netstring.cpp networkstream.cpp number.cpp number-script.cpp object.cpp objectdatabase.cpp object-script.cpp primitivetype.cpp process.cpp
   ringbuffer.cpp scriptframe.cpp scriptfunction.cpp scriptfunctionwrapper.cpp scriptglobal.cpp
   scriptutils.cpp serializer.cpp socket.cpp stacktrace.cpp
   statsfunction.cpp stdiostream.cpp stream.cpp streamlogger.cpp streamlogger.thpp string.cpp string-script.cpp
-  sysloglogger.cpp sysloglogger.thpp tcpsocket.cpp thinmutex.cpp threadpool.cpp timer.cpp
+  sqlitedatabase.cpp sysloglogger.cpp sysloglogger.thpp tcpsocket.cpp thinmutex.cpp threadpool.cpp timer.cpp
   tlsstream.cpp tlsutility.cpp type.cpp unixsocket.cpp utility.cpp value.cpp
   value-operators.cpp workqueue.cpp
 )
@@ -43,7 +43,7 @@ endif()
 
 add_library(base SHARED ${base_SOURCES})
 
-target_link_libraries(base ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${YAJL_LIBRARIES} mmatch)
+target_link_libraries(base ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${YAJL_LIBRARIES} ${SQLITE3_LIBRARIES} mmatch)
 
 if(HAVE_LIBEXECINFO)
     target_link_libraries(base execinfo)

@@ -99,6 +99,14 @@ if(NOT YAJL_FOUND)
   set(YAJL_LIBRARIES "yajl")
 endif()
 
+find_package(SQLite3)
+
+if (NOT SQLITE3_FOUND)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/sqlite3)
+  link_directories(${CMAKE_CURRENT_BINARY_DIR}/third-party/sqlite3)
+  set(SQLITE3_LIBRARIES "sqlite3")
+endif()
+
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/lib
   ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/lib

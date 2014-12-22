@@ -103,6 +103,9 @@ public:
 	static String GetIncludeConfDir(void);
 	static void DeclareIncludeConfDir(const String& path);
 
+	static String GetDbPath(void);
+	static void DeclareDbPath(const String& path);
+
 	static String GetStatePath(void);
 	static void DeclareStatePath(const String& path);
 

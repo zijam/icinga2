@@ -22,6 +22,7 @@
 #include "base/json.hpp"
 #include "base/netstring.hpp"
 #include "base/exception.hpp"
+#include "base/application.hpp"
 #include <boost/foreach.hpp>
 #include <fstream>
 
@@ -32,51 +33,35 @@ ConfigCompilerContext *ConfigCompilerContext::GetInstance(void)
 	return Singleton<ConfigCompilerContext>::GetInstance();
 }
 
-void ConfigCompilerContext::OpenObjectsFile(const String& filename)
+void ConfigCompilerContext::OpenObjectsFile(void)
 {
-	m_ObjectsPath = filename;
+	m_Database = boost::make_shared<ObjectDatabase>(Application::GetDbPath());
 
-	String tempFilename = m_ObjectsPath + ".tmp";
+	m_Database->BeginTransaction();
+	m_Database->DeactivateAllObjects();
 
-	std::fstream *fp = new std::fstream();
-	fp->open(tempFilename.CStr(), std::ios_base::out);
-
-	if (!*fp)
-		BOOST_THROW_EXCEPTION(std::runtime_error("Could not open '" + tempFilename + "' file"));
-
-	m_ObjectsFP = new StdioStream(fp, true);
+	m_WorkQueue = boost::make_shared<WorkQueue>(25000, 1);
 }
 
-void ConfigCompilerContext::WriteObject(const Dictionary::Ptr& object)
+void ConfigCompilerContext::WriteObject(const DynamicObject::Ptr& object, const DebugHint& dhint)
 {
-	if (!m_ObjectsFP)
+	if (!m_Database)
 		return;
 
-	String json = JsonEncode(object);
+	m_WorkQueue->Enqueue(boost::bind(&ConfigCompilerContext::InternalWriteObject, this, object, dhint));
+}
 
-	{
-		boost::mutex::scoped_lock lock(m_Mutex);
-		NetString::WriteStringToStream(m_ObjectsFP, json);
-	}
+void ConfigCompilerContext::InternalWriteObject(const DynamicObject::Ptr& object, const DebugHint& dhint)
+{
+	m_Database->SaveObjectConfig(object, dhint.ToDictionary());
 }
 
 void ConfigCompilerContext::FinishObjectsFile(void)
 {
-	m_ObjectsFP->Close();
-	m_ObjectsFP.reset();
+	m_WorkQueue->Join();
+	m_WorkQueue.reset();
 
-	String tempFilename = m_ObjectsPath + ".tmp";
-
-#ifdef _WIN32
-	_unlink(m_ObjectsPath.CStr());
-#endif /* _WIN32 */
-
-	if (rename(tempFilename.CStr(), m_ObjectsPath.CStr()) < 0) {
-		BOOST_THROW_EXCEPTION(posix_error()
-		    << boost::errinfo_api_function("rename")
-		    << boost::errinfo_errno(errno)
-		    << boost::errinfo_file_name(tempFilename));
-        }
-
+	m_Database->Cleanup();
+	m_Database->CommitTransaction();
+	m_Database.reset();
 }
-

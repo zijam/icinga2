@@ -26,14 +26,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#ifdef I2_EXECVPE_BUILD
-#	define I2_EXECVPE_API I2_EXPORT
-#else
-#	define I2_EXECVPE_API I2_IMPORT
-#endif /* I2_EXECVPE_BUILD */
-
 #ifndef _MSC_VER
-I2_EXECVPE_API int icinga2_execvpe(const char *file, char *const argv[], char *const envp[]);
+int icinga2_execvpe(const char *file, char *const argv[], char *const envp[]);
 #endif /* _MSC_VER */
 
 #ifdef __cplusplus

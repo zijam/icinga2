@@ -19,7 +19,6 @@ add_library(mmatch SHARED mmatch.c mmatch.h)
 
 set_target_properties(
   mmatch PROPERTIES
-  DEFINE_SYMBOL I2_MMATCH_BUILD
   FOLDER Lib
 )
 

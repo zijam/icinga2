@@ -24,7 +24,7 @@
 #include "base/dynamicobject.hpp"
 #include "base/objectlock.hpp"
 #include <map>
-# include <boost/iterator/iterator_facade.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 
 namespace icinga
 {

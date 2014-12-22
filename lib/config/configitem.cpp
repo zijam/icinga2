@@ -36,6 +36,7 @@
 #include "base/json.hpp"
 #include "base/exception.hpp"
 #include "base/scriptfunction.hpp"
+#include "base/objectdatabase.hpp"
 #include <sstream>
 #include <fstream>
 #include <boost/foreach.hpp>
@@ -205,17 +206,7 @@ DynamicObject::Ptr ConfigItem::Commit(bool discard)
 		m_CommittedItems.push_back(this);
 	}
 
-	Dictionary::Ptr attrs = Serialize(dobj, FAConfig);
-
-	Dictionary::Ptr persistentItem = new Dictionary();
-
-	persistentItem->Set("type", GetType());
-	persistentItem->Set("name", GetName());
-	persistentItem->Set("properties", attrs);
-	persistentItem->Set("debug_hints", debugHints.ToDictionary());
-
-	ConfigCompilerContext::GetInstance()->WriteObject(persistentItem);
-	persistentItem.reset();
+	ConfigCompilerContext::GetInstance()->WriteObject(dobj, debugHints);
 
 	ConfigType::Ptr ctype = ConfigType::GetByName(GetType());
 
@@ -355,9 +346,25 @@ bool ConfigItem::CommitItems(void)
 
 bool ConfigItem::ActivateItems(void)
 {
+	ObjectDatabase odb(Application::GetDbPath());
+
+	/* migrate old state files */
+	String filename = Application::GetStatePath();
+
+	if (Utility::PathExists(filename)) {
+		try {
+			odb.ImportStateFile(filename);
+		} catch (const std::exception& ex) {
+			Log(LogCritical, "ConfigItem")
+				<< "Failed to import state file: " << DiagnosticInformation(ex);
+		}
+
+		(void) unlink(filename.CStr());
+	}
+
 	/* restore the previous program state */
 	try {
-		DynamicObject::RestoreObjects(Application::GetStatePath());
+		odb.RestoreObjectsState();
 	} catch (const std::exception& ex) {
 		Log(LogCritical, "ConfigItem")
 		    << "Failed to restore state file: " << DiagnosticInformation(ex);

@@ -99,6 +99,7 @@ BuildRequires: bison
 BuildRequires: make
 BuildRequires: readline-devel
 BuildRequires: ncurses-devel
+BuildRequires: sqlite-devel
 
 %if "%{_vendor}" == "redhat" && (0%{?el5} || 0%{?rhel} == 5 || "%{?dist}" == ".el5")
 # el5 requires packages.icinga.org

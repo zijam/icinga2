@@ -24,3 +24,7 @@ endif()
 if(UNIX OR CYGWIN)
   add_subdirectory(execvpe)
 endif()
+
+if(NOT SQLITE3_FOUND)
+  add_subdirectory(sqlite3)
+endif()

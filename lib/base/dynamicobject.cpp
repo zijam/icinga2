@@ -32,6 +32,7 @@
 #include "base/workqueue.hpp"
 #include "base/context.hpp"
 #include "base/application.hpp"
+#include "base/objectdatabase.hpp"
 #include <fstream>
 #include <boost/foreach.hpp>
 #include <boost/exception/errinfo_api_function.hpp>
@@ -217,127 +218,6 @@ void DynamicObject::SetAuthority(bool authority)
 		SetPaused(true);
 		OnPaused(this);
 	}
-}
-
-void DynamicObject::DumpObjects(const String& filename, int attributeTypes)
-{
-	Log(LogInformation, "DynamicObject")
-	    << "Dumping program state to file '" << filename << "'";
-
-	String tempFilename = filename + ".tmp";
-
-	std::fstream fp;
-	fp.open(tempFilename.CStr(), std::ios_base::out);
-
-	if (!fp)
-		BOOST_THROW_EXCEPTION(std::runtime_error("Could not open '" + tempFilename + "' file"));
-
-	StdioStream::Ptr sfp = new StdioStream(&fp, false);
-
-	BOOST_FOREACH(const DynamicType::Ptr& type, DynamicType::GetTypes()) {
-		BOOST_FOREACH(const DynamicObject::Ptr& object, type->GetObjects()) {
-			Dictionary::Ptr persistentObject = new Dictionary();
-
-			persistentObject->Set("type", type->GetName());
-			persistentObject->Set("name", object->GetName());
-
-			Dictionary::Ptr update = Serialize(object, attributeTypes);
-
-			if (!update)
-				continue;
-
-			persistentObject->Set("update", update);
-
-			String json = JsonEncode(persistentObject);
-
-			NetString::WriteStringToStream(sfp, json);
-		}
-	}
-
-	sfp->Close();
-
-	fp.close();
-
-#ifdef _WIN32
-	_unlink(filename.CStr());
-#endif /* _WIN32 */
-
-	if (rename(tempFilename.CStr(), filename.CStr()) < 0) {
-		BOOST_THROW_EXCEPTION(posix_error()
-		    << boost::errinfo_api_function("rename")
-		    << boost::errinfo_errno(errno)
-		    << boost::errinfo_file_name(tempFilename));
-	}
-}
-
-void DynamicObject::RestoreObject(const String& message, int attributeTypes)
-{
-	Dictionary::Ptr persistentObject = JsonDecode(message);
-
-	String type = persistentObject->Get("type");
-
-	DynamicType::Ptr dt = DynamicType::GetByName(type);
-
-	if (!dt)
-		return;
-
-	String name = persistentObject->Get("name");
-
-	DynamicObject::Ptr object = dt->GetObject(name);
-
-	if (!object)
-		return;
-
-	ASSERT(!object->IsActive());
-#ifdef I2_DEBUG
-	Log(LogDebug, "DynamicObject")
-	    << "Restoring object '" << name << "' of type '" << type << "'.";
-#endif /* I2_DEBUG */
-	Dictionary::Ptr update = persistentObject->Get("update");
-	Deserialize(object, update, false, attributeTypes);
-	object->OnStateLoaded();
-	object->SetStateLoaded(true);
-}
-
-void DynamicObject::RestoreObjects(const String& filename, int attributeTypes)
-{
-	Log(LogInformation, "DynamicObject")
-	    << "Restoring program state from file '" << filename << "'";
-
-	std::fstream fp;
-	fp.open(filename.CStr(), std::ios_base::in);
-
-	StdioStream::Ptr sfp = new StdioStream (&fp, false);
-
-	unsigned long restored = 0;
-
-	WorkQueue upq(25000, Application::GetConcurrency());
-
-	String message;
-	while (NetString::ReadStringFromStream(sfp, &message)) {
-		upq.Enqueue(boost::bind(&DynamicObject::RestoreObject, message, attributeTypes));
-		restored++;
-	}
-
-	sfp->Close();
-
-	upq.Join();
-
-	unsigned long no_state = 0;
-
-	BOOST_FOREACH(const DynamicType::Ptr& type, DynamicType::GetTypes()) {
-		BOOST_FOREACH(const DynamicObject::Ptr& object, type->GetObjects()) {
-			if (!object->GetStateLoaded()) {
-				object->OnStateLoaded();
-				object->SetStateLoaded(true);
-
-				no_state++;
-			}
-		}
-	}
-
-	Log(LogInformation, "DynamicObject")
-	    << "Restored " << restored << " objects. Loaded " << no_state << " new objects without state.";
 }
 
 void DynamicObject::StopObjects(void)

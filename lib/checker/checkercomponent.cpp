@@ -77,6 +77,12 @@ void CheckerComponent::Start(void)
 
 	m_Stopped = false;
 
+	BOOST_FOREACH(const Host::Ptr& host, DynamicType::GetObjectsByType<Host>())
+		ObjectHandler(host);
+
+	BOOST_FOREACH(const Service::Ptr& service, DynamicType::GetObjectsByType<Service>())
+		ObjectHandler(service);
+
 	m_Thread = boost::thread(boost::bind(&CheckerComponent::CheckThreadProc, this));
 
 	m_ResultTimer = new Timer();
