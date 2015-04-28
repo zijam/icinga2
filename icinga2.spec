@@ -189,6 +189,26 @@ Conflicts:    icinga-gui-config
 Icinga 1.x Classic UI Standalone configuration with locations
 for Icinga 2.
 
+%package -n vim-icinga2
+Summary:      Vim syntax highlighting for icinga2
+Group:        Applications/System
+%if "%{_vendor}" == "suse"
+Requires:     vim-data
+%else
+Requires:     vim-filesystem
+%endif
+
+
+%description -n vim-icinga2
+Vim syntax highlighting for icinga2
+
+%package -n nano-icinga2
+Summary:      Nano syntax highlighting for icinga2
+Group:        Applications/System
+Requires:     nano
+
+%description -n nano-icinga2
+Nano syntax highlighting for icinga2
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -265,6 +285,20 @@ rm -f %{buildroot}/%{_sysconfdir}/%{name}/features-enabled/*.conf
 mkdir -p "%{buildroot}%{_localstatedir}/adm/fillup-templates/"
 mv "%{buildroot}%{_sysconfdir}/sysconfig/%{name}" "%{buildroot}%{_localstatedir}/adm/fillup-templates/sysconfig.%{name}"
 %endif
+
+%if "%{_vendor}" == "suse"
+%if 0%{?suse_version} >= 1310
+install -D -m 0644 tools/syntax/vim/syntax/%{name}.vim %{buildroot}%{_datadir}/vim/vim74/syntax/%{name}.vim
+install -D -m 0644 tools/syntax/vim/ftdetect/%{name}.vim %{buildroot}%{_datadir}/vim/vim74/ftdetect/%{name}.vim
+%else
+install -D -m 0644 tools/syntax/vim/syntax/%{name}.vim %{buildroot}%{_datadir}/vim/vim72/syntax/%{name}.vim
+install -D -m 0644 tools/syntax/vim/ftdetect/%{name}.vim %{buildroot}%{_datadir}/vim/vim72/ftdetect/%{name}.vim
+%endif
+%else
+install -D -m 0644 tools/syntax/vim/syntax/%{name}.vim %{buildroot}%{_datadir}/vim/vimfiles/syntax/%{name}.vim
+install -D -m 0644 tools/syntax/vim/ftdetect/%{name}.vim %{buildroot}%{_datadir}/vim/vimfiles/ftdetect/%{name}.vim
+%endif
+install -D -m 0644 tools/syntax/nano/%{name}.nanorc %{buildroot}%{_datadir}/nano/%{name}.nanorc
 
 
 %clean
@@ -543,5 +577,24 @@ exit 0
 %config(noreplace) %{icingaclassicconfdir}/cgi.cfg
 %config(noreplace) %{apacheconfdir}/icinga.conf
 %config(noreplace) %attr(0640,root,%{apachegroup}) %{icingaclassicconfdir}/passwd
+
+%files -n vim-icinga2
+%defattr(-,root,root,-)
+%if "%{_vendor}" == "suse"
+%if 0%{?suse_version} >= 1310
+%{_datadir}/vim/vim74/syntax/%{name}.vim
+%{_datadir}/vim/vim74/ftdetect/%{name}.vim
+%else
+%{_datadir}/vim/vim72/syntax/%{name}.vim
+%{_datadir}/vim/vim72/ftdetect/%{name}.vim
+%endif
+%else
+%{_datadir}/vim/vimfiles/syntax/%{name}.vim
+%{_datadir}/vim/vimfiles/ftdetect/%{name}.vim
+%endif
+
+%files -n nano-icinga2
+%defattr(-,root,root,-)
+%{_datadir}/nano/%{name}.nanorc
 
 %changelog

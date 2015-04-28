@@ -242,14 +242,19 @@ The RHEL, SUSE and Debian package `icinga2-common` install these files into
 
 ### <a id="configuration-syntax-highlighting-vim"></a> Configuration Syntax Highlighting using Vim
 
-Create a new local vim configuration storage, if not already existing.
-Edit `vim/ftdetect/icinga2.vim` if your paths to the Icinga 2 configuration
-differ.
+Install the package vim-icinga2 with your distribution's package manager.
 
-    $ PREFIX=~/.vim
-    $ mkdir -p $PREFIX/{syntax,ftdetect}
-    $ cp vim/syntax/icinga2.vim $PREFIX/syntax/
-    $ cp vim/ftdetect/icinga2.vim $PREFIX/ftdetect/
+Debian/Ubuntu:
+
+    $ apt-get install vim-icinga2
+
+RHEL/CentOS/Fedora:
+
+    $ yum install vim-icinga2
+
+SLES/openSUSE:
+
+    $ zypper install vim-icinga2
 
 Test it:
 
@@ -257,20 +262,30 @@ Test it:
 
 ### <a id="configuration-syntax-highlighting-nano"></a> Configuration Syntax Highlighting using Nano
 
-Copy the `/etc/nanorc` sample file to your home directory. Create the `/etc/nano` directory
-and copy the provided `icinga2.nanorc` into it.
+Install the package nano-icinga2 with your distribution's package manager.
+
+Debian/Ubuntu:
+
+    $ apt-get install nano-icinga2
+
+RHEL/CentOS/Fedora:
+
+    $ yum install nano-icinga2
+
+SLES/openSUSE:
+
+    $ zypper install nano-icinga2
+
+Copy the `/etc/nanorc` sample file to your home directory. 
 
     $ cp /etc/nanorc ~/.nanorc
-
-    # mkdir -p /etc/nano
-    # cp icinga2.nanorc /etc/nano/
 
 Then include the icinga2.nanorc file in your ~/.nanorc by adding the following line:
 
     $ vim ~/.nanorc
 
     ## Icinga 2
-    include "/etc/nano/icinga2.nanorc"
+    include "/usr/share/nano/icinga2.nanorc"
 
 Test it:
 
