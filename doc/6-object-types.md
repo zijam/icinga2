@@ -502,8 +502,8 @@ Configuration Attributes:
   zone		  |**Optional.** The zone this object is a member of.
   command\_endpoint|**Optional.** The endpoint where commands are executed on.
   notes           |**Optional.** Notes for the host.
-  notes\_url      |**Optional.** Url for notes for the host (for example, in notification commands).
-  action\_url     |**Optional.** Url for actions for the host (for example, an external graphing tool).
+  notes\_url      |**Optional.** Url for notes for the host (for example, in notification commands). For adding more than one url quote them with single quotes and separate them with whitespace (e.g. 'firstURL' 'secondURL' 'thirdURL').
+  action\_url     |**Optional.** Url for actions for the host (for example, an external graphing tool). For adding more than one url quote them with single quotes and separate them with whitespace (e.g. 'firstURL' 'secondURL' 'thirdURL').
   icon\_image     |**Optional.** Icon image for the host. Used by external interfaces only.
   icon\_image\_alt|**Optional.** Icon image description for the host. Used by external interface only.
 
@@ -1087,8 +1087,8 @@ Configuration Attributes:
   zone		  |**Optional.** The zone this object is a member of.
   command\_endpoint|**Optional.** The endpoint where commands are executed on.
   notes           |**Optional.** Notes for the service.
-  notes\_url      |**Optional.** Url for notes for the service (for example, in notification commands).
-  action_url      |**Optional.** Url for actions for the service (for example, an external graphing tool).
+  notes\_url      |**Optional.** Url for notes for the service (for example, in notification commands). For adding more than one url quote them with single quotes and separate them with whitespace (e.g. 'firstURL' 'secondURL' 'thirdURL').
+  action_url      |**Optional.** Url for actions for the service (for example, an external graphing tool). For adding more than one url quote them with single quotes and separate them with whitespace (e.g. 'firstURL' 'secondURL' 'thirdURL').
   icon\_image     |**Optional.** Icon image for the service. Used by external interfaces only.
   icon\_image\_alt|**Optional.** Icon image description for the service. Used by external interface only.
 
