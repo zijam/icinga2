@@ -4,37 +4,46 @@ import ConfigParser
 import argparse
 import re
 from sys import exit
+from os import rename
 
-config = ConfigParser.SafeConfigParser()
-try:
-  config.readfp(open('data.cfg'))
-except:
-  print "Could not read config!"
-  exit(1)
 
 VERSION = '321.312.321'
 
 def apply_config(section):
-  found = False
-  output = ''
-  regx = re.compile(section['regex'][1:-1])
-  with open(section['name'], 'r') as f:
-    for line in f:
-      if not found:
-        result = re.match(regx, line)
-        if not result == None:
-          line = line.replace(result.group(1), VERSION)
-          found = True
-      output += line
-    f.close()
+  try:
+    type = section['type']
+  except:
+    print "Invalid config"
+    exit(1)
 
-  print output
-  with open(section['name'], 'w') as f:
+  if type == 'version':
+    regx = re.compile(section['regex'][1:-1])
+    update_verison(section['name'], regx)
+  elif type == 'config':
+    return
+
+def update_version(file, regex):
+  done = False
+  output = ''
+  with open(file, 'r'):
+    for line in f:
+      if not done:
+        result = re.match(regex, line)
+      if result:
+        line = line.replace(result.group(1), VERSION)
+        found = True
+      output += line
+     f.close()
+
+  rename(file, file + '.old')
+
+  with open(file,'w')
     f.write(output)
     f.close()
+
       
 
-def CreateSectionDict(section):
+def CreateSectionDict(section, config):
   config_section = {}
   section_options = config.options(section)
 
@@ -49,11 +58,17 @@ def CreateSectionDict(section):
 
 
 def main():
+  config = ConfigParser.SafeConfigParser()
+  try:
+    config.readfp(open('data.cfg'))
+  except:
+    print "Could not read config!"
+    exit(1)
+
   config_dict = {}
   for i in config.sections():
-    config_dict[i] = CreateSectionDict(i)
+    config_dict[i] = CreateSectionDict(i, config)
 
-#  for s in config_dict:
   apply_config(config_dict["Spec"])
 
 main()
