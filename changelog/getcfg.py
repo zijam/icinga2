@@ -18,14 +18,14 @@ def apply_config(section):
 
   if type == 'version':
     regx = re.compile(section['regex'][1:-1])
-    update_verison(section['name'], regx)
+    update_verison(section['path'], regx)
   elif type == 'config':
     return
 
 def update_version(file, regex):
   done = False
   output = ''
-  with open(file, 'r'):
+  with open(file, 'r') as f:
     for line in f:
       if not done:
         result = re.match(regex, line)
@@ -33,14 +33,24 @@ def update_version(file, regex):
         line = line.replace(result.group(1), VERSION)
         found = True
       output += line
-     f.close()
+    f.close()
 
   rename(file, file + '.old')
 
-  with open(file,'w')
+  with open(file,'w') as f:
     f.write(output)
     f.close()
 
+def update_changelog(file, marker, changelog):
+  rename(file, file + '.old')
+
+  if marker == '':
+    with open(file, 'w'):
+      f.write(changelog)
+      f.close()
+      return
+
+  return
       
 
 def CreateSectionDict(section, config):
@@ -68,6 +78,15 @@ def main():
   config_dict = {}
   for i in config.sections():
     config_dict[i] = CreateSectionDict(i, config)
+    if not "path" in config_dict or not "type" in config_dict:
+      print 'All sections require "path" and "type" inforamtion'
+      exit(1)
+
+  if "Info" not in config_dict:
+    print "No Info section found"
+    exit(1)
+
+  global project = config_dict['Info']
 
   apply_config(config_dict["Spec"])
 
