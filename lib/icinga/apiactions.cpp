@@ -27,15 +27,21 @@
 
 using namespace icinga;
 
-Dictionary::Ptr ApiActions::CreateResult(const int code, const String& status) {
+REGISTER_APIACTION(reschedule_check, "Service;Host", &ApiActions::RescheduleCheck);
+REGISTER_APIACTION(process_check_result, "Service;Host", &ApiActions::ProcessCheckResult);
+/*REGISTER_APIACTION(enable_svc_checks, "Hostgroup;ServiceGroup", &ApiActions::EnableSvcChecks);
+REGISTER_APIACTION(disable_svc_checks, "Hostgroup;ServiceGroup", &ApiActions::DisableSvcChecks);*/
+REGISTER_APIACTION(enable_passive_checks, "Service;Host;ServiceGroup;HostGroup", &ApiActions::EnablePassiveChecks);
+REGISTER_APIACTION(disable_passive_checks, "Service;Host;ServiceGroup;HostGroup", &ApiActions::DisablePassiveChecks);
+REGISTER_APIACTION(acknowledge_problem, "Service;Host", &ApiActions::AcknowledgeProblem);
+
+Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
+{
 	Dictionary::Ptr result = new Dictionary();
 	result->Set("code", code);
 	result->Set("status", status);
 	return result;
 }
-
-REGISTER_APIACTION(reschedule_check, "Service;Host", &ApiActions::RescheduleCheck);
-REGISTER_APIACTION(process_check_result, "Service;Host", &ApiActions::ProcessCheckResult);
 
 Dictionary::Ptr ApiActions::RescheduleCheck(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
 {
@@ -95,15 +101,15 @@ Dictionary::Ptr ApiActions::ProcessCheckResult(const DynamicObject::Ptr& object,
 	}
 
 	if (!params->Contains("output"))
-		return ApiActions::CreateResult(400, "Parameter 'output' is required");
+		return ApiActions::CreateResult(403, "Parameter 'output' is required");
 
 	CheckResult::Ptr cr = new CheckResult();
 	cr->SetOutput(HttpUtility::GetLastParameter(params, "output"));
 	cr->SetState(state);
 
 	cr->SetCheckSource(HttpUtility::GetLastParameter(params, "check_source"));
-	cr->SetPerformanceData(HttpUtility::GetLastParameter(params, "performance_data"));
-	cr->SetCommand(HttpUtility::GetLastParameter(params, "command"));
+	cr->SetPerformanceData(params->Get("performance_data"));
+	cr->SetCommand(params->Get("command"));
 	cr->SetExecutionEnd(HttpUtility::GetLastParameter(params, "execution_end"));
 	cr->SetExecutionStart(HttpUtility::GetLastParameter(params, "execution_start"));
 	cr->SetScheduleEnd(HttpUtility::GetLastParameter(params, "schedule_end"));
@@ -111,14 +117,81 @@ Dictionary::Ptr ApiActions::ProcessCheckResult(const DynamicObject::Ptr& object,
 
 	checkable->ProcessCheckResult(cr);
 
-	if (!service) {
-		ObjectLock olock(checkable);
-
-		/* Reschedule the next check. The side effect of this is that for as long
-		 * as we receive passive results for a service we won't execute any
-		 * active checks. */
-		checkable->SetNextCheck(Utility::GetTime() + checkable->GetCheckInterval());
-	}
+	/* Reschedule the next check. The side effect of this is that for as long
+	 * as we receive passive results for a service we won't execute any
+	 * active checks. */
+	checkable->SetNextCheck(Utility::GetTime() + checkable->GetCheckInterval());
 
 	return ApiActions::CreateResult(200, "Successfully processed check result for " + name);
+}
+/*
+Dictionary::Ptr ApiActions::EnableSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot enable checks for non-existent object");
+
+	//checkable == HostGroup or ServiceGroup?
+
+}
+*/
+Dictionary::Ptr ApiActions::EnablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	//TODO check if group undso
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot enable passive checks for non-existent object");
+
+	checkable->SetEnablePassiveChecks(true);
+
+	return ApiActions::CreateResult(200, "Successfully enabled passive checks for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::DisablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	//TODO check if group undso
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot disable passive checks non-existent object");
+
+	checkable->SetEnablePassiveChecks(false);
+
+	return ApiActions::CreateResult(200, "Successfully disabled passive checks for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot acknowledge propblem for non-existent object");
+	
+	AcknowledgementType sticky = AcknowledgementNormal;
+	bool notify = false;
+	double timestamp = 0;
+	if (params->Contains("sticky"))
+		sticky = AcknowledgementSticky;
+	if (params->Contains("notify"))
+		notify = true;
+	if (params->Contains("timestamp"))
+		timestamp = params->Get("timestamp");
+
+	Host::Ptr host;
+	Service::Ptr service;
+	tie(host, service) = GetHostService(checkable);
+
+	if (!service) {
+		if (host->GetState() == HostUp)
+			return ApiActions::CreateResult(403, "Host " + checkable->GetName() + " is up");
+	} else {
+		if (service->GetState() == ServiceOK)
+			return ApiActions::CreateResult(403, "Service " + checkable->GetName() + " is ok");
+	}
+
+	checkable->AddComment(CommentAcknowledgement, params->Get("author"), params->Get("comment"), timestamp);
+	checkable->AcknowledgeProblem(params->Get("author"), params->Get("comment"), sticky, notify, timestamp);
+	return ApiActions::CreateResult(200, "Successfully acknowledged problem for " +  checkable->GetName());
 }
