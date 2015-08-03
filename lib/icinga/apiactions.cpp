@@ -168,6 +168,9 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 
 	if (!checkable)
 		return ApiActions::CreateResult(404, "Cannot acknowledge propblem for non-existent object");
+
+	if (!params->Contains("author") || !params->Contains("comment"))
+		return ApiActions::CreateResult(403, "Acknowledgements require an author and a comment");
 	
 	AcknowledgementType sticky = AcknowledgementNormal;
 	bool notify = false;
@@ -185,10 +188,10 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 
 	if (!service) {
 		if (host->GetState() == HostUp)
-			return ApiActions::CreateResult(403, "Host " + checkable->GetName() + " is up");
+			return ApiActions::CreateResult(409, "Host " + checkable->GetName() + " is up");
 	} else {
 		if (service->GetState() == ServiceOK)
-			return ApiActions::CreateResult(403, "Service " + checkable->GetName() + " is ok");
+			return ApiActions::CreateResult(409, "Service " + checkable->GetName() + " is ok");
 	}
 
 	checkable->AddComment(CommentAcknowledgement, params->Get("author"), params->Get("comment"), timestamp);
