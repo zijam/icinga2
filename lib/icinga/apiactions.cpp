@@ -19,6 +19,8 @@
 
 #include "icinga/apiactions.hpp"
 #include "icinga/service.hpp"
+#include "icinga/servicegroup.hpp"
+#include "icinga/hostgroup.hpp"
 #include "icinga/pluginutility.hpp"
 #include "remote/apiaction.hpp"
 #include "remote/httputility.hpp"
@@ -29,11 +31,12 @@ using namespace icinga;
 
 REGISTER_APIACTION(reschedule_check, "Service;Host", &ApiActions::RescheduleCheck);
 REGISTER_APIACTION(process_check_result, "Service;Host", &ApiActions::ProcessCheckResult);
-/*REGISTER_APIACTION(enable_svc_checks, "Hostgroup;ServiceGroup", &ApiActions::EnableSvcChecks);
-REGISTER_APIACTION(disable_svc_checks, "Hostgroup;ServiceGroup", &ApiActions::DisableSvcChecks);*/
-REGISTER_APIACTION(enable_passive_checks, "Service;Host;ServiceGroup;HostGroup", &ApiActions::EnablePassiveChecks);
-REGISTER_APIACTION(disable_passive_checks, "Service;Host;ServiceGroup;HostGroup", &ApiActions::DisablePassiveChecks);
+REGISTER_APIACTION(enable_passive_checks, "Service;Host", &ApiActions::EnablePassiveChecks); //TODO groups
+REGISTER_APIACTION(disable_passive_checks, "Service;Host", &ApiActions::DisablePassiveChecks); //TODO groups
+REGISTER_APIACTION(enable_active_checks, "Host", &ApiActions::EnableActiveChecks); //TODO groups
+REGISTER_APIACTION(disable_active_checks, "Host", &ApiActions::DisableActiveChecks); //TODO groups
 REGISTER_APIACTION(acknowledge_problem, "Service;Host", &ApiActions::AcknowledgeProblem);
+REGISTER_APIACTION(remove_acknowledgement, "Service;Host", &ApiActions::RemoveAcknowledgement);
 
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
@@ -74,8 +77,6 @@ Dictionary::Ptr ApiActions::ProcessCheckResult(const DynamicObject::Ptr& object,
 	if (!checkable->GetEnablePassiveChecks())
 		return ApiActions::CreateResult(403, "Passive checks are disabled for " + checkable->GetName());
 
-	String name;
-
 	Host::Ptr host;
 	Service::Ptr service;
 	tie(host, service) = GetHostService(checkable);
@@ -88,16 +89,14 @@ Dictionary::Ptr ApiActions::ProcessCheckResult(const DynamicObject::Ptr& object,
 	ServiceState state;
 
 	if (!service) {
-		name = host->GetName();
 		if (exitStatus == 0)
 			state = ServiceOK;
 		else if (exitStatus == 1)
 			state = ServiceCritical;
 		else
-			return ApiActions::CreateResult(403, "Invalid 'exit_status' for Host " + name);
+			return ApiActions::CreateResult(403, "Invalid 'exit_status' for Host " + checkable->GetName());
 	} else {
 		state = PluginUtility::ExitStatusToState(exitStatus);
-		name = service->GetName() + "!" + service->GetHostName();
 	}
 
 	if (!params->Contains("output"))
@@ -122,20 +121,9 @@ Dictionary::Ptr ApiActions::ProcessCheckResult(const DynamicObject::Ptr& object,
 	 * active checks. */
 	checkable->SetNextCheck(Utility::GetTime() + checkable->GetCheckInterval());
 
-	return ApiActions::CreateResult(200, "Successfully processed check result for " + name);
+	return ApiActions::CreateResult(200, "Successfully processed check result for " + checkable->GetName());
 }
-/*
-Dictionary::Ptr ApiActions::EnableSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
-{
-	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
 
-	if (!checkable)
-		return ApiActions::CreateResult(404, "Cannot enable checks for non-existent object");
-
-	//checkable == HostGroup or ServiceGroup?
-
-}
-*/
 Dictionary::Ptr ApiActions::EnablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
 {
 	//TODO check if group undso
@@ -162,12 +150,40 @@ Dictionary::Ptr ApiActions::DisablePassiveChecks(const DynamicObject::Ptr& objec
 	return ApiActions::CreateResult(200, "Successfully disabled passive checks for " + checkable->GetName());
 }
 
+Dictionary::Ptr ApiActions::EnableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Host::Ptr host = static_pointer_cast<Host>(object);
+
+	if (!host)
+		return ApiActions::CreateResult(404, "Cannot enable checks for non-existent object");
+	
+	BOOST_FOREACH(const Service::Ptr& service, host->GetServices()) {
+		service->SetEnableActiveChecks(true);
+	}
+
+	return ApiActions::CreateResult(200, "Successfull enabled active checks for " + host->GetName());
+}
+
+Dictionary::Ptr ApiActions::DisableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Host::Ptr host = static_pointer_cast<Host>(object);
+
+	if (!host)
+		return ApiActions::CreateResult(404, "Cannot enable checks for non-existent object");
+	
+	BOOST_FOREACH(const Service::Ptr& service, host->GetServices()) {
+		service->SetEnableActiveChecks(false);
+	}
+
+	return ApiActions::CreateResult(200, "Successfull disabled active checks for " + host->GetName());
+}
+
 Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
 {
 	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
 
 	if (!checkable)
-		return ApiActions::CreateResult(404, "Cannot acknowledge propblem for non-existent object");
+		return ApiActions::CreateResult(404, "Cannot acknowledge problem for non-existent object");
 
 	if (!params->Contains("author") || !params->Contains("comment"))
 		return ApiActions::CreateResult(403, "Acknowledgements require an author and a comment");
@@ -197,4 +213,17 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 	checkable->AddComment(CommentAcknowledgement, params->Get("author"), params->Get("comment"), timestamp);
 	checkable->AcknowledgeProblem(params->Get("author"), params->Get("comment"), sticky, notify, timestamp);
 	return ApiActions::CreateResult(200, "Successfully acknowledged problem for " +  checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::RemoveAcknowledgement(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot remove acknowlegement for non-existent object");
+
+	checkable->ClearAcknowledgement();
+	checkable->RemoveCommentsByType(CommentAcknowledgement);
+	
+	return ApiActions::CreateResult(200, "Successfully removed acknowledgement for " + checkable->GetName());
 }
