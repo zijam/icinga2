@@ -42,6 +42,9 @@ class GraphiteWriter : DynamicObject
         [config] bool enable_send_metadata {
                 default {{{ return false; }}}
         };
+        [config] bool enable_legacy_mode {
+                default {{{ return false; }}}
+        };
 
 };
 
