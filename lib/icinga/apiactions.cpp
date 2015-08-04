@@ -43,6 +43,8 @@ REGISTER_APIACTION(remove_all_comments, "Service;Host", &ApiActions::RemoveAllCo
 REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications); //TODO groups
 REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications); //TODO groups
 REGISTER_APIACTION(delay_notifications, "Service;Host", &ApiActions::DelayNotifications); //TODO groups
+REGISTER_APIACTION(schedule_downtime, "Service;Host", &ApiActions::ScheduleDowntime); //TODO groups
+//REGISTER_APIACTION(remove_downtime, "Service;Host", &ApiActions::RemoveDowntime); //TODO groups
 
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
@@ -314,4 +316,49 @@ Dictionary::Ptr ApiActions::DelayNotifications(const DynamicObject::Ptr& object,
 	BOOST_FOREACH(const Notification::Ptr& notification, checkable->GetNotifications()) {
 		notification->SetNextNotification(HttpUtility::GetLastParameter(params, "timestamp"));
 	}
+
+	return ApiActions::CreateResult(200, "Successfully delayed notifications for " + checkable->GetName());
 }
+
+Dictionary::Ptr ApiActions::ScheduleDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Can't schedule downtime for non-existent object");
+
+	if (!params->Contains("start_time") || !params->Contains("end_time") || !params->Contains("duration") ||
+		!params->Contains("author") || !params->Contains("comment"))
+		return ApiActions::CreateResult(404, "Options 'start_time', 'end_time', 'duration', 'author' and 'comment' are required");
+	//Duration from end_time - start_time ?
+	
+	bool fixd = false;
+	if (params->Contains("fixed"))
+		fixd = HttpUtility::GetLastParameter(params, "fixed");
+
+	int triggeredByLegacy = params->Contains("trigger_id") ? HttpUtility::GetLastParameter(params, "trigger_id") : 0;
+	String triggeredBy;
+	if (triggeredByLegacy)
+		triggeredBy = Service::GetDowntimeIDFromLegacyID(triggeredByLegacy);
+
+	checkable->AddDowntime(HttpUtility::GetLastParameter(params, "author"), HttpUtility::GetLastParameter(params, "comment"),
+	    HttpUtility::GetLastParameter(params, "start_time"), HttpUtility::GetLastParameter(params, "end_time"),
+	    fixd, triggeredBy, HttpUtility::GetLastParameter(params, "duration"));
+
+	return ApiActions::CreateResult(200, "Successfully scheduled downtime for " + checkable->GetName());
+}
+
+/*
+Dictionary::Ptr ApiActions::RemoveDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	if (!params->Contains("downtime_id"))
+		return ApiActions::CreateResult(403, "Downtime removal requires a downtime_id";
+
+	int downtime_id = HttpUtility::GetLastParameter(params, "downtime_id");
+
+	String rid = Service::GetDowntimeIDFromLegacyID(downtime_id);
+	Service::RemoveDowntime(rid);
+	
+	return ApiActions::CreateResult(200, "Successfully removed downtime " + downtime_id);
+}
+*/

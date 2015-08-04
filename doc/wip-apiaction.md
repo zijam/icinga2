@@ -17,3 +17,5 @@ remove-all-comments                    | - | Service; Host
 enable-notifications                   | - | Service; Host; ServiceGroup; HostGroup
 disable-notifications                  | - | Service; Host; ServiceGroup; HostGroup
 delay-notifications                    | timestamp | Service;Host
+add-downtime                           | start_time; end_time; duration; author; comment; {trigger_id}; {(fixed)} | Service; Host; ServiceGroup; HostGroup
+remove-downtime                        | downtime_id | -

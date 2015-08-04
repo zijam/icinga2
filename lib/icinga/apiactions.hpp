@@ -47,6 +47,8 @@ public:
 	static Dictionary::Ptr EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr DelayNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ScheduleDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+/*	static Dictionary::Ptr RemoveDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
 private:
 	static Dictionary::Ptr CreateResult(int code, const String& status);
 };
