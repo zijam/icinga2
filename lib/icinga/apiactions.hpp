@@ -49,6 +49,21 @@ public:
 	static Dictionary::Ptr DelayNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ScheduleDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 /*	static Dictionary::Ptr RemoveDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
+
+/*
+	static Dictionary::Ptr ApiActions::EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::DisableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::EnableEventHandlers(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::DisableEventHandlers(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::EnablePerformanceData(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::DisablePerformanceData(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::StartExecutingSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::StopExecutingSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::StartExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::StopExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+*/
 private:
 	static Dictionary::Ptr CreateResult(int code, const String& status);
 };
@@ -56,3 +71,4 @@ private:
 }
 
 #endif /* APIACTIONS_H */
+ 

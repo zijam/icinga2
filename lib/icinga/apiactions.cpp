@@ -38,14 +38,27 @@ REGISTER_APIACTION(disable_active_checks, "Host", &ApiActions::DisableActiveChec
 REGISTER_APIACTION(acknowledge_problem, "Service;Host", &ApiActions::AcknowledgeProblem);
 REGISTER_APIACTION(remove_acknowledgement, "Service;Host", &ApiActions::RemoveAcknowledgement);
 REGISTER_APIACTION(add_comment, "Service;Host", &ApiActions::AddComment);
-//REGISTER_APIACTION(remove_comment, "Service;Host", &ApiActions::RemoveComment); TODO Actions without objects
+//REGISTER_APIACTION(remove_comment, "", &ApiActions::RemoveComment); TODO Actions without objects
 REGISTER_APIACTION(remove_all_comments, "Service;Host", &ApiActions::RemoveAllComments);
 REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications); //TODO groups
 REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications); //TODO groups
 REGISTER_APIACTION(delay_notifications, "Service;Host", &ApiActions::DelayNotifications); //TODO groups
 REGISTER_APIACTION(schedule_downtime, "Service;Host", &ApiActions::ScheduleDowntime); //TODO groups
 //REGISTER_APIACTION(remove_downtime, "Service;Host", &ApiActions::RemoveDowntime); //TODO groups
-
+/*
+REGISTER_APIACTION("enable_notifications", "", &ApiActions::EnableNotifications);
+REGISTER_APIACTION("disable_notifications", "", &ApiActions::DisableNotifications);
+REGISTER_APIACTION("enable_flap_detection", "", &ApiActions::EnableFlapDetection);
+REGISTER_APIACTION("disable_flap_detection", "", &ApiActions::DisableFlapDetection);
+REGISTER_APIACTION("enable_event_handlers", "", &ApiActions::EnableEventHandlers);
+REGISTER_APIACTION("disable_event_handlers", "", &ApiActions::DisableEventHandlers);
+REGISTER_APIACTION("enable_performance_data", "", &ApiActions::EnablePerformanceData);
+REGISTER_APIACTION("disable_performance_data", "", &ApiActions::DisablePerformanceData);
+REGISTER_APIACTION("start_executing_svc_checks", "", &ApiActions::StartExecutingSvcChecks);
+REGISTER_APIACTION("stop_executing_svc_checks", "", &ApiActions::StopExecutingSvcChecks);
+REGISTER_APIACTION("start_executing_host_checks", "", &ApiActions::StartExecutingHostChecks);
+REGISTER_APIACTION("stop_executing_host_checks", "", &ApiActions::StopExecutingHostChecks);
+*/
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
 	Dictionary::Ptr result = new Dictionary();
@@ -336,7 +349,7 @@ Dictionary::Ptr ApiActions::ScheduleDowntime(const DynamicObject::Ptr& object, c
 	if (params->Contains("fixed"))
 		fixd = HttpUtility::GetLastParameter(params, "fixed");
 
-	int triggeredByLegacy = params->Contains("trigger_id") ? HttpUtility::GetLastParameter(params, "trigger_id") : 0;
+	int triggeredByLegacy = params->Contains("trigger_id") ? (int) HttpUtility::GetLastParameter(params, "trigger_id") : 0;
 	String triggeredBy;
 	if (triggeredByLegacy)
 		triggeredBy = Service::GetDowntimeIDFromLegacyID(triggeredByLegacy);
@@ -360,5 +373,90 @@ Dictionary::Ptr ApiActions::RemoveDowntime(const DynamicObject::Ptr& object, con
 	Service::RemoveDowntime(rid);
 	
 	return ApiActions::CreateResult(200, "Successfully removed downtime " + downtime_id);
+}
+*/
+/*
+Dictionary::Ptr ApiActions::EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableNotifications(true);
+
+	ApiActions::CreateResult(200, "Globally enabled notifications.");
+}
+
+Dictionary::Ptr ApiActions::DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableNotifications(false);
+
+	ApiActions::CreateResult(200, "Globally disabled notifications.");
+}
+
+Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableFlapping(true);
+
+	ApiActions::CreateResult(200, "Globally enabled flap detection.");
+}
+
+Dictionary::Ptr ApiActions::DisableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableFlapping(false);
+
+	ApiActions::CreateResult(200, "Globally disabled flap detection.");
+}
+
+Dictionary::Ptr ApiActions::EnableEventHandlers(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableEventHandlers(true);
+
+	ApiActions::CreateResult(200, "Globally enabled event handlers.");
+}
+
+Dictionary::Ptr ApiActions::DisableEventHandlers(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableEventHandlers(false);
+
+	ApiActions::CreateResult(200, "Globally disabled event handlers.");
+}
+
+Dictionary::Ptr ApiActions::EnablePerformanceData(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnablePerfdata(true);
+
+	ApiActions::CreateResult(200, "Globally enabled performance data processing.");
+}
+
+Dictionary::Ptr ApiActions::DisablePerformanceData(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnablePerfdata(false);
+
+	ApiActions::CreateResult(200, "Globally disabled performance data processing.");
+}
+
+Dictionary::Ptr ApiActions::StartExecutingSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableServiceChecks(true);
+
+	ApiActions::CreateResult(200, "Globally enabled service checks.");
+}
+
+Dictionary::Ptr ApiActions::StopExecutingSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableServiceChecks(false);
+
+	ApiActions::CreateResult(200, "Globally disabled service checks.");
+}
+
+Dictionary::Ptr ApiActions::StartExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableHostChecks(true);
+
+	ApiActions::CreateResult(200, "Globally enabled host checks.");
+}
+
+Dictionary::Ptr ApiActions::StopExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	IcingaApplication::GetInstance()->SetEnableHostChecks(false);
+
+	ApiActions::CreateResult(200, "Globally disabled host checks.");
 }
 */
