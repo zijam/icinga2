@@ -37,6 +37,9 @@ REGISTER_APIACTION(enable_active_checks, "Host", &ApiActions::EnableActiveChecks
 REGISTER_APIACTION(disable_active_checks, "Host", &ApiActions::DisableActiveChecks); //TODO groups
 REGISTER_APIACTION(acknowledge_problem, "Service;Host", &ApiActions::AcknowledgeProblem);
 REGISTER_APIACTION(remove_acknowledgement, "Service;Host", &ApiActions::RemoveAcknowledgement);
+REGISTER_APIACTION(add_comment, "Service;Host", &ApiActions::AddComment);
+//REGISTER_APIACTION(remove_comment, "Service;Host", &ApiActions::RemoveComment); TODO Actions without objects
+REGISTER_APIACTION(remove_all_comments, "Service;Host", &ApiActions::RemoveAllComments);
 
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
@@ -99,16 +102,16 @@ Dictionary::Ptr ApiActions::ProcessCheckResult(const DynamicObject::Ptr& object,
 		state = PluginUtility::ExitStatusToState(exitStatus);
 	}
 
-	if (!params->Contains("output"))
-		return ApiActions::CreateResult(403, "Parameter 'output' is required");
+	if (!params->Contains("plugin_output"))
+		return ApiActions::CreateResult(403, "Parameter 'plugin_output' is required");
 
 	CheckResult::Ptr cr = new CheckResult();
-	cr->SetOutput(HttpUtility::GetLastParameter(params, "output"));
+	cr->SetOutput(HttpUtility::GetLastParameter(params, "plugin_output"));
 	cr->SetState(state);
 
 	cr->SetCheckSource(HttpUtility::GetLastParameter(params, "check_source"));
 	cr->SetPerformanceData(params->Get("performance_data"));
-	cr->SetCommand(params->Get("command"));
+	cr->SetCommand(params->Get("check_command"));
 	cr->SetExecutionEnd(HttpUtility::GetLastParameter(params, "execution_end"));
 	cr->SetExecutionStart(HttpUtility::GetLastParameter(params, "execution_start"));
 	cr->SetScheduleEnd(HttpUtility::GetLastParameter(params, "schedule_end"));
@@ -196,7 +199,7 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 	if (params->Contains("notify"))
 		notify = true;
 	if (params->Contains("timestamp"))
-		timestamp = params->Get("timestamp");
+		timestamp = HttpUtility::GetLastParameter(params, "timestamp");
 
 	Host::Ptr host;
 	Service::Ptr service;
@@ -210,8 +213,10 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 			return ApiActions::CreateResult(409, "Service " + checkable->GetName() + " is ok");
 	}
 
-	checkable->AddComment(CommentAcknowledgement, params->Get("author"), params->Get("comment"), timestamp);
-	checkable->AcknowledgeProblem(params->Get("author"), params->Get("comment"), sticky, notify, timestamp);
+	checkable->AddComment(CommentAcknowledgement, HttpUtility::GetLastParameter(params, "author"),
+	    HttpUtility::GetLastParameter(params, "comment"), timestamp);
+	checkable->AcknowledgeProblem(HttpUtility::GetLastParameter(params, "author"), 
+	    HttpUtility::GetLastParameter(params, "comment"), sticky, notify, timestamp);
 	return ApiActions::CreateResult(200, "Successfully acknowledged problem for " +  checkable->GetName());
 }
 
@@ -226,4 +231,47 @@ Dictionary::Ptr ApiActions::RemoveAcknowledgement(const DynamicObject::Ptr& obje
 	checkable->RemoveCommentsByType(CommentAcknowledgement);
 	
 	return ApiActions::CreateResult(200, "Successfully removed acknowledgement for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::AddComment(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot add comment for non-existent object");
+
+	if (!params->Contains("author") || !params->Contains("comment"))
+		return ApiActions::CreateResult(403, "Comments require an author and a comment");
+
+	//TODO	Fragnen warum es (void) checkable->AddComment(..) war
+	checkable->AddComment(CommentUser, HttpUtility::GetLastParameter(params, "author"),
+	    HttpUtility::GetLastParameter(params, "comment"), 0);
+
+	return ApiActions::CreateResult(200, "Successfully added comment for " + checkable->GetName());
+}
+
+/*
+Dictionary::Ptr ApiActions::RemoveComment(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	if (!params->Contains("comment_id"))
+		return ApiActions::CreateResult(403, "Comment removal requires an comment_id";
+
+	int comment_id = HttpUtility::GetLastParameter(params, "comment_id");
+
+	String rid = Service::GetCommentIDFromLegacyID(comment_id);
+	Service::RemoveComment(rid);
+	
+	return ApiActions::CreateResult(200, "Successfully removed comment " + comment_id);
+}
+*/
+
+Dictionary::Ptr ApiActions::RemoveAllComments(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot remove comments from non-existent object");
+
+	checkable->RemoveAllComments();
+	return ApiActions::CreateResult(200, "Successfully removed all comments for " + checkable->GetName());
 }

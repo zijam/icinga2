@@ -41,6 +41,9 @@ public:
 	static Dictionary::Ptr DisableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr AcknowledgeProblem(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr RemoveAcknowledgement(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr AddComment(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+//	static Dictionary::Ptr RemoveComment(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr RemoveAllComments(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 private:
 	static Dictionary::Ptr CreateResult(int code, const String& status);
 };
