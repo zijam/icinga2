@@ -19,6 +19,8 @@
 
 #include "base/debuginfo.hpp"
 
+library base;
+
 namespace icinga
 {
 

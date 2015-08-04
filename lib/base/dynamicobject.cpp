@@ -43,10 +43,6 @@ using namespace icinga;
 
 REGISTER_TYPE_WITH_PROTOTYPE(DynamicObject, DynamicObject::GetPrototype());
 
-boost::signals2::signal<void (const DynamicObject::Ptr&)> DynamicObject::OnStarted;
-boost::signals2::signal<void (const DynamicObject::Ptr&)> DynamicObject::OnStopped;
-boost::signals2::signal<void (const DynamicObject::Ptr&)> DynamicObject::OnPaused;
-boost::signals2::signal<void (const DynamicObject::Ptr&)> DynamicObject::OnResumed;
 boost::signals2::signal<void (const DynamicObject::Ptr&)> DynamicObject::OnStateChanged;
 
 DynamicObject::DynamicObject(void)
@@ -161,12 +157,12 @@ void DynamicObject::Activate(void)
 	{
 		ObjectLock olock(this);
 		ASSERT(!IsActive());
-		SetActive(true);
+		SetActive(true, true);
 	}
 
-	OnStarted(this);
-
 	SetAuthority(true);
+	
+	NotifyActive();
 }
 
 void DynamicObject::Stop(void)
@@ -191,14 +187,14 @@ void DynamicObject::Deactivate(void)
 		if (!IsActive())
 			return;
 
-		SetActive(false);
+		SetActive(false, true);
 	}
 
 	Stop();
 
 	ASSERT(GetStopCalled());
 
-	OnStopped(this);
+	NotifyActive();
 }
 
 void DynamicObject::OnConfigLoaded(void)
@@ -238,13 +234,11 @@ void DynamicObject::SetAuthority(bool authority)
 		Resume();
 		ASSERT(GetResumeCalled());
 		SetPaused(false);
-		OnResumed(this);
 	} else if (!authority && !GetPaused()) {
 		SetPauseCalled(false);
 		Pause();
 		ASSERT(GetPauseCalled());
 		SetPaused(true);
-		OnPaused(this);
 	}
 }
 
