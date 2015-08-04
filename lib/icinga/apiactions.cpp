@@ -40,6 +40,9 @@ REGISTER_APIACTION(remove_acknowledgement, "Service;Host", &ApiActions::RemoveAc
 REGISTER_APIACTION(add_comment, "Service;Host", &ApiActions::AddComment);
 //REGISTER_APIACTION(remove_comment, "Service;Host", &ApiActions::RemoveComment); TODO Actions without objects
 REGISTER_APIACTION(remove_all_comments, "Service;Host", &ApiActions::RemoveAllComments);
+REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications); //TODO groups
+REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications); //TODO groups
+REGISTER_APIACTION(delay_notifications, "Service;Host", &ApiActions::DelayNotifications); //TODO groups
 
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
@@ -164,7 +167,7 @@ Dictionary::Ptr ApiActions::EnableActiveChecks(const DynamicObject::Ptr& object,
 		service->SetEnableActiveChecks(true);
 	}
 
-	return ApiActions::CreateResult(200, "Successfull enabled active checks for " + host->GetName());
+	return ApiActions::CreateResult(200, "Successfully enabled active checks for " + host->GetName());
 }
 
 Dictionary::Ptr ApiActions::DisableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
@@ -178,7 +181,7 @@ Dictionary::Ptr ApiActions::DisableActiveChecks(const DynamicObject::Ptr& object
 		service->SetEnableActiveChecks(false);
 	}
 
-	return ApiActions::CreateResult(200, "Successfull disabled active checks for " + host->GetName());
+	return ApiActions::CreateResult(200, "Successfully disabled active checks for " + host->GetName());
 }
 
 Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
@@ -274,4 +277,41 @@ Dictionary::Ptr ApiActions::RemoveAllComments(const DynamicObject::Ptr& object, 
 
 	checkable->RemoveAllComments();
 	return ApiActions::CreateResult(200, "Successfully removed all comments for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot enable notifications for non-existent object");
+
+	checkable->SetEnableNotifications(true);
+	return ApiActions::CreateResult(200, "Successfully enabled notifications for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot disable notifications for non-existent object");
+
+	checkable->SetEnableNotifications(true);
+	return ApiActions::CreateResult(200, "Successfully disabled notifications for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::DelayNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot delay notifications for non-existent object");
+
+	if (!params->Contains("timestamp"))
+		return ApiActions::CreateResult(403, "A timestamp is required to delay notifications");
+
+	BOOST_FOREACH(const Notification::Ptr& notification, checkable->GetNotifications()) {
+		notification->SetNextNotification(HttpUtility::GetLastParameter(params, "timestamp"));
+	}
 }

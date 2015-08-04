@@ -14,3 +14,6 @@ remove-acknowledgement                 | - | Service; Host
 add-comment                            | author; comment | Service; Host
 remove-comment                         | comment_id | -
 remove-all-comments                    | - | Service; Host
+enable-notifications                   | - | Service; Host; ServiceGroup; HostGroup
+disable-notifications                  | - | Service; Host; ServiceGroup; HostGroup
+delay-notifications                    | timestamp | Service;Host
