@@ -19,3 +19,15 @@ disable-notifications                  | - | Service; Host; ServiceGroup; HostGr
 delay-notifications                    | timestamp | Service;Host
 add-downtime                           | start_time; end_time; duration; author; comment; {trigger_id}; {(fixed)} | Service; Host; ServiceGroup; HostGroup
 remove-downtime                        | downtime_id | -
+enable-notifications                   | - | -
+disable-notifications                  | - | -
+enable-flap-detection                  | - | -
+disable-flap-detection                 | - | -
+enable-event-handlers                  | - | -
+disable-event-handlers                 | - | -
+enable-performance-data                | - | -
+disable-performance-data               | - | -
+start-executing-svc-checks             | - | -
+stop-executing-svc-checks              | - | -
+start-executing-host-checks            | - | -
+stop-executing-host-checks             | - | -
