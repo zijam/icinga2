@@ -49,6 +49,12 @@ public:
 	static Dictionary::Ptr DelayNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ScheduleDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 /*	static Dictionary::Ptr RemoveDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
+	static Dictionary::Ptr ChangeEventHandler(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ChangeCheckCommand(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ChangeMaxCheckAttempts(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ChangeCheckInterval(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ChangeRetryInterval(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ChangeCheckPeriod(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 
 /*
 	static Dictionary::Ptr ApiActions::EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);

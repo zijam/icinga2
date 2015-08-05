@@ -22,6 +22,9 @@
 #include "icinga/servicegroup.hpp"
 #include "icinga/hostgroup.hpp"
 #include "icinga/pluginutility.hpp"
+#include "icinga/checkcommand.hpp"
+#include "icinga/eventcommand.hpp"
+#include "icinga/notificationcommand.hpp"
 #include "remote/apiaction.hpp"
 #include "remote/httputility.hpp"
 #include "base/utility.hpp"
@@ -45,19 +48,26 @@ REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNo
 REGISTER_APIACTION(delay_notifications, "Service;Host", &ApiActions::DelayNotifications); //TODO groups
 REGISTER_APIACTION(schedule_downtime, "Service;Host", &ApiActions::ScheduleDowntime); //TODO groups
 //REGISTER_APIACTION(remove_downtime, "Service;Host", &ApiActions::RemoveDowntime); //TODO groups
+
+REGISTER_APIACTION(change_event_handler, "Service;Host", &ApiActions::ChangeEventHandler);
+REGISTER_APIACTION(change_check_command, "Service;Host", &ApiActions::ChangeCheckCommand);
+REGISTER_APIACTION(change_max_check_attempts, "Service;Host", &ApiActions::ChangeMaxCheckAttempts);
+REGISTER_APIACTION(change_check_period, "Service;Host", &ApiActions::ChangeCheckPeriod);
+REGISTER_APIACTION(change_check_interval, "Service;Host", &ApiActions::ChangeCheckInterval);
+REGISTER_APIACTION(change_retry_interval, "Service;Host", &ApiActions::ChangeRetryInterval);
 /*
-REGISTER_APIACTION("enable_notifications", "", &ApiActions::EnableNotifications);
-REGISTER_APIACTION("disable_notifications", "", &ApiActions::DisableNotifications);
-REGISTER_APIACTION("enable_flap_detection", "", &ApiActions::EnableFlapDetection);
-REGISTER_APIACTION("disable_flap_detection", "", &ApiActions::DisableFlapDetection);
-REGISTER_APIACTION("enable_event_handlers", "", &ApiActions::EnableEventHandlers);
-REGISTER_APIACTION("disable_event_handlers", "", &ApiActions::DisableEventHandlers);
-REGISTER_APIACTION("enable_performance_data", "", &ApiActions::EnablePerformanceData);
-REGISTER_APIACTION("disable_performance_data", "", &ApiActions::DisablePerformanceData);
-REGISTER_APIACTION("start_executing_svc_checks", "", &ApiActions::StartExecutingSvcChecks);
-REGISTER_APIACTION("stop_executing_svc_checks", "", &ApiActions::StopExecutingSvcChecks);
-REGISTER_APIACTION("start_executing_host_checks", "", &ApiActions::StartExecutingHostChecks);
-REGISTER_APIACTION("stop_executing_host_checks", "", &ApiActions::StopExecutingHostChecks);
+REGISTER_APIACTION(enable_notifications, "", &ApiActions::EnableNotifications);
+REGISTER_APIACTION(disable_notifications, "", &ApiActions::DisableNotifications);
+REGISTER_APIACTION(enable_flap_detection, "", &ApiActions::EnableFlapDetection);
+REGISTER_APIACTION(disable_flap_detection, "", &ApiActions::DisableFlapDetection);
+REGISTER_APIACTION(enable_event_handlers, "", &ApiActions::EnableEventHandlers);
+REGISTER_APIACTION(disable_event_handlers, "", &ApiActions::DisableEventHandlers);
+REGISTER_APIACTION(enable_performance_data, "", &ApiActions::EnablePerformanceData);
+REGISTER_APIACTION(disable_performance_data, "", &ApiActions::DisablePerformanceData);
+REGISTER_APIACTION(start_executing_svc_checks, "", &ApiActions::StartExecutingSvcChecks);
+REGISTER_APIACTION(stop_executing_svc_checks, "", &ApiActions::StopExecutingSvcChecks);
+REGISTER_APIACTION(start_executing_host_checks, "", &ApiActions::StartExecutingHostChecks);
+REGISTER_APIACTION(stop_executing_host_checks, "", &ApiActions::StopExecutingHostChecks);
 */
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
@@ -460,3 +470,111 @@ Dictionary::Ptr ApiActions::StopExecutingHostChecks(const DynamicObject::Ptr& ob
 	ApiActions::CreateResult(200, "Globally disabled host checks.");
 }
 */
+
+Dictionary::Ptr ApiActions::ChangeEventHandler(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot change event handler of a non-existent object");
+
+   /* empty command string implicitely disables event handler */
+    if (!params->Contains("event_command_name"))
+        checkable->SetEnableEventHandler(false);
+	else {
+		String event_name = HttpUtility::GetLastParameter(params, "event_command_name");
+
+        EventCommand::Ptr command = EventCommand::GetByName(event_name);
+
+		if (!command)
+			return ApiActions::CreateResult(404, "Event command '" + event_name + "' does not exist");
+
+		checkable->SetEventCommand(command);
+
+		return ApiActions::CreateResult(200, "Successfully changed event command for " + checkable->GetName());
+    }    
+}
+
+Dictionary::Ptr ApiActions::ChangeCheckCommand(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot change check command of a non-existent object");
+	if (!params->Contains("check_command_name"))
+		return ApiActions::CreateResult(403, "Parameter 'check_command_name' is required");
+
+	String check_name = HttpUtility::GetLastParameter(params, "check_command_name");
+
+	CheckCommand::Ptr command = CheckCommand::GetByName(check_name);
+
+	if (!command)
+		return ApiActions::CreateResult(404, "Check command '" + check_name + "' does not exist");
+
+	checkable->SetCheckCommand(command);
+
+	return ApiActions::CreateResult(200, "Successfully changed check command for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::ChangeMaxCheckAttempts(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot change check command of a non-existent object");
+	if (!params->Contains("max_check_attempts"))
+		return ApiActions::CreateResult(403, "Parameter 'max_check_attempts' is required");
+
+	checkable->SetMaxCheckAttempts(HttpUtility::GetLastParameter(params, "max_check_attempts"));
+
+	return ApiActions::CreateResult(200, "Successfully changed the maximum check attempts for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::ChangeCheckPeriod(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot change check command of a non-existent object");
+	if (!params->Contains("time_period_name"))
+		return ApiActions::CreateResult(403, "Parameter 'time_period_name' is required");
+
+	String time_period_name = HttpUtility::GetLastParameter(params, "time_period_name");
+
+	TimePeriod::Ptr time_period = TimePeriod::GetByName(time_period_name);
+
+	if (!time_period)
+		return ApiActions::CreateResult(404, "Time period '" + time_period_name + "' does not exist");
+
+	checkable->SetCheckPeriod(time_period);
+
+	return ApiActions::CreateResult(200, "Successfully changed the time period for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::ChangeCheckInterval(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot change check command of a non-existent object");
+	if (!params->Contains("check_interval"))
+		return ApiActions::CreateResult(403, "Parameter 'check_interval' is required");
+
+	checkable->SetCheckInterval(HttpUtility::GetLastParameter(params, "check_interval"));
+
+	return ApiActions::CreateResult(200, "Successfully changed the check interval for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::ChangeRetryInterval(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Cannot change check command of a non-existent object");
+	if (!params->Contains("retry_interval"))
+		return ApiActions::CreateResult(403, "Parameter 'retry_interval' is required");
+
+	checkable->SetRetryInterval(HttpUtility::GetLastParameter(params, "retry_interval"));
+
+	return ApiActions::CreateResult(200, "Successfully changed the retry interval for " + checkable->GetName());
+}
