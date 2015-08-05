@@ -48,8 +48,8 @@ REGISTER_APIACTION(enable_passive_checks, "Service;Host", &ApiActions::EnablePas
 REGISTER_APIACTION(disable_passive_checks, "Service;Host", &ApiActions::DisablePassiveChecks); //TODO groups
 REGISTER_APIACTION(enable_active_checks, "Host", &ApiActions::EnableActiveChecks); //TODO groups
 REGISTER_APIACTION(disable_active_checks, "Host", &ApiActions::DisableActiveChecks); //TODO groups
-REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications); //TODO groups
-REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications); //TODO groups
+REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications);
+REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications);
 REGISTER_APIACTION(enable_flap_detection, "Service;Host", &ApiActions::EnableFlapDetection);
 REGISTER_APIACTION(disable_flap_detection, "Service;Host", &ApiActions::DisableFlapDetection);
 
@@ -395,7 +395,7 @@ Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object
 	return ApiActions::CreateResult(200, "Successfully enabled flap detection for " + checkable->GetName());
 }
 
-Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+Dictionary::Ptr ApiActions::DisableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
 {
 	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
 
@@ -515,9 +515,10 @@ Dictionary::Ptr ApiActions::ChangeEventHandler(const DynamicObject::Ptr& object,
 		return ApiActions::CreateResult(404, "Cannot change event handler of a non-existent object");
 
    /* empty command string implicitely disables event handler */
-	if (!params->Contains("event_command_name"))
+	if (!params->Contains("event_command_name")) {
 		checkable->SetEnableEventHandler(false);
-	else {
+		return ApiActions::CreateResult(200, "Successfully disabled event handler for " + checkable->GetName());
+	} else {
 		String event_name = HttpUtility::GetLastParameter(params, "event_command_name");
 
 		EventCommand::Ptr command = EventCommand::GetByName(event_name);
