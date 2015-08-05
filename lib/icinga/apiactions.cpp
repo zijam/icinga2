@@ -32,22 +32,26 @@
 
 using namespace icinga;
 
-REGISTER_APIACTION(reschedule_check, "Service;Host", &ApiActions::RescheduleCheck);
 REGISTER_APIACTION(process_check_result, "Service;Host", &ApiActions::ProcessCheckResult);
-REGISTER_APIACTION(enable_passive_checks, "Service;Host", &ApiActions::EnablePassiveChecks); //TODO groups
-REGISTER_APIACTION(disable_passive_checks, "Service;Host", &ApiActions::DisablePassiveChecks); //TODO groups
-REGISTER_APIACTION(enable_active_checks, "Host", &ApiActions::EnableActiveChecks); //TODO groups
-REGISTER_APIACTION(disable_active_checks, "Host", &ApiActions::DisableActiveChecks); //TODO groups
+REGISTER_APIACTION(reschedule_check, "Service;Host", &ApiActions::RescheduleCheck);
+REGISTER_APIACTION(delay_notifications, "Service;Host", &ApiActions::DelayNotifications); //TODO groups
+
 REGISTER_APIACTION(acknowledge_problem, "Service;Host", &ApiActions::AcknowledgeProblem);
 REGISTER_APIACTION(remove_acknowledgement, "Service;Host", &ApiActions::RemoveAcknowledgement);
 REGISTER_APIACTION(add_comment, "Service;Host", &ApiActions::AddComment);
 //REGISTER_APIACTION(remove_comment, "", &ApiActions::RemoveComment); TODO Actions without objects
 REGISTER_APIACTION(remove_all_comments, "Service;Host", &ApiActions::RemoveAllComments);
-REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications); //TODO groups
-REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications); //TODO groups
-REGISTER_APIACTION(delay_notifications, "Service;Host", &ApiActions::DelayNotifications); //TODO groups
 REGISTER_APIACTION(schedule_downtime, "Service;Host", &ApiActions::ScheduleDowntime); //TODO groups
 //REGISTER_APIACTION(remove_downtime, "Service;Host", &ApiActions::RemoveDowntime); //TODO groups
+
+REGISTER_APIACTION(enable_passive_checks, "Service;Host", &ApiActions::EnablePassiveChecks); //TODO groups
+REGISTER_APIACTION(disable_passive_checks, "Service;Host", &ApiActions::DisablePassiveChecks); //TODO groups
+REGISTER_APIACTION(enable_active_checks, "Host", &ApiActions::EnableActiveChecks); //TODO groups
+REGISTER_APIACTION(disable_active_checks, "Host", &ApiActions::DisableActiveChecks); //TODO groups
+REGISTER_APIACTION(enable_notifications, "Service;Host", &ApiActions::EnableNotifications); //TODO groups
+REGISTER_APIACTION(disable_notifications, "Service;Host", &ApiActions::DisableNotifications); //TODO groups
+REGISTER_APIACTION(enable_flap_detection, "Service;Host", &ApiActions::EnableFlapDetection);
+REGISTER_APIACTION(disable_flap_detection, "Service;Host", &ApiActions::DisableFlapDetection);
 
 REGISTER_APIACTION(change_event_handler, "Service;Host", &ApiActions::ChangeEventHandler);
 REGISTER_APIACTION(change_check_command, "Service;Host", &ApiActions::ChangeCheckCommand);
@@ -55,6 +59,7 @@ REGISTER_APIACTION(change_max_check_attempts, "Service;Host", &ApiActions::Chang
 REGISTER_APIACTION(change_check_period, "Service;Host", &ApiActions::ChangeCheckPeriod);
 REGISTER_APIACTION(change_check_interval, "Service;Host", &ApiActions::ChangeCheckInterval);
 REGISTER_APIACTION(change_retry_interval, "Service;Host", &ApiActions::ChangeRetryInterval);
+
 /*
 REGISTER_APIACTION(enable_notifications, "", &ApiActions::EnableNotifications);
 REGISTER_APIACTION(disable_notifications, "", &ApiActions::DisableNotifications);
@@ -69,6 +74,7 @@ REGISTER_APIACTION(stop_executing_svc_checks, "", &ApiActions::StopExecutingSvcC
 REGISTER_APIACTION(start_executing_host_checks, "", &ApiActions::StartExecutingHostChecks);
 REGISTER_APIACTION(stop_executing_host_checks, "", &ApiActions::StopExecutingHostChecks);
 */
+
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
 	Dictionary::Ptr result = new Dictionary();
@@ -369,6 +375,30 @@ Dictionary::Ptr ApiActions::ScheduleDowntime(const DynamicObject::Ptr& object, c
 	    fixd, triggeredBy, HttpUtility::GetLastParameter(params, "duration"));
 
 	return ApiActions::CreateResult(200, "Successfully scheduled downtime for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Can't enable flap detection for non-existent object");
+
+	checkable->SetEnableFlapping(true);
+
+	return ApiActions::CreateResult(200, "Successfully enabled flap detection for " + checkable->GetName());
+}
+
+Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Checkable::Ptr checkable = static_pointer_cast<Checkable>(object);
+
+	if (!checkable)
+		return ApiActions::CreateResult(404, "Can't disable flap detection for non-existent object");
+
+	checkable->SetEnableFlapping(false);
+
+	return ApiActions::CreateResult(200, "Successfully disabled flap detection for " + checkable->GetName());
 }
 
 /*

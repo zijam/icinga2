@@ -33,22 +33,27 @@ namespace icinga
 class I2_ICINGA_API ApiActions
 {
 public:
-	static Dictionary::Ptr RescheduleCheck(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ProcessCheckResult(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr EnablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr DisablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr EnableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr DisableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr RescheduleCheck(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr DelayNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+
 	static Dictionary::Ptr AcknowledgeProblem(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr RemoveAcknowledgement(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr AddComment(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 /*	static Dictionary::Ptr RemoveComment(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
 	static Dictionary::Ptr RemoveAllComments(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr DelayNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ScheduleDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 /*	static Dictionary::Ptr RemoveDowntime(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
+
+	static Dictionary::Ptr EnablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr DisablePassiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr EnableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr DisableActiveChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr DisableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+
 	static Dictionary::Ptr ChangeEventHandler(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ChangeCheckCommand(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ChangeMaxCheckAttempts(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
@@ -56,8 +61,7 @@ public:
 	static Dictionary::Ptr ChangeRetryInterval(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ChangeCheckPeriod(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 
-/*
-	static Dictionary::Ptr ApiActions::EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+/*	static Dictionary::Ptr ApiActions::EnableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ApiActions::DisableNotifications(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ApiActions::EnableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ApiActions::DisableFlapDetection(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
@@ -68,8 +72,8 @@ public:
 	static Dictionary::Ptr ApiActions::StartExecutingSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ApiActions::StopExecutingSvcChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ApiActions::StartExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-	static Dictionary::Ptr ApiActions::StopExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
-*/
+	static Dictionary::Ptr ApiActions::StopExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
+
 private:
 	static Dictionary::Ptr CreateResult(int code, const String& status);
 };
