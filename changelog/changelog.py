@@ -18,47 +18,105 @@
 # * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
 # ******************************************************************************/
 
-import urllib2, json, sys, string
+import urllib2, json, sys, string, ConfigParser, re
 from argparse import ArgumentParser
+from sys import exit
+from os import rename
 
 DESCRIPTION = "update release changes"
 VERSION="1.1.0"
 ISSUE_URL="https://dev.icinga.org/issues/"
 
+arg_parser = ArgumentParser(description= "%s (Version: %s)" % (DESCRIPTION, VERSION))
+arg_parser.add_argument('-V', '--version', required=True, type=str, help="define version to query")
+arg_parser.add_argument('-p', '--project', type=str, help="project name (default = i2)")
+arg_parser.add_argument('-l', '--links', action='store_true', help="add urls to issues")
+arg_parser.add_argument('-H', '--html', action='store_true', help="print html output (defaults to markdown)")
+arg_parser.add_argument('--config', type=str, help='path to changelog config (default changelog.cfg)')
+arg_parser.add_argument('--print', dest='verbose', action='store_true', help="also print changelog (old behaviour)")
+
+args = arg_parser.parse_args(sys.argv[1:])
+
+project = "i2" if not args.project else args.project
+ftype = "md" if not args.html else "html"
+config_path = "data.cfg" if not args.config else args.config
+
 def format_header(text, lvl, ftype):
-   if ftype == "html":
-       return "<h%s>%s</h%s>" % (lvl, text, lvl)
-   if ftype == "md":
-       return "#" * lvl + " " + text
+  if ftype == "html":
+    return "<h%s>%s</h%s>" % (lvl, text, lvl)
+  if ftype == "md":
+    return "#" * lvl + " " + text
 
 def format_logentry(log_entry, args, issue_url=ISSUE_URL):
-   if args.links:
-       if args.html:
-           return "<li> {0} <a href=\"{3}{1}\">{1}</a>: {2}</li>".format(log_entry[0], log_entry[1], log_entry[2], issue_url)
-       else:
-           return "* {0} [{1}]({3}{1} \"{0} {1}\"): {2}".format(log_entry[0], log_entry[1], log_entry[2], issue_url)
-   else:
-       if args.html:
-           return "<li>%s %d: %s</li>" % log_entry
-       else:
-           return "* %s %d: %s" % log_entry
+  if args.links:
+    if args.html:
+      return "<li> {0} <a href=\"{3}{1}\">{1}</a>: {2}</li>".format(log_entry[0], log_entry[1], log_entry[2], issue_url)
+    else:
+      return "* {0} [{1}]({3}{1} \"{0} {1}\"): {2}".format(log_entry[0], log_entry[1], log_entry[2], issue_url)
+  else:
+    if args.html:
+      return "<li>%s %d: %s</li>" % log_entry
+    else:
+      return "* %s %d: %s" % log_entry
 
-def main():
-  arg_parser = ArgumentParser(description= "%s (Version: %s)" % (DESCRIPTION, VERSION))
-  arg_parser.add_argument('-V', '--version', required=True, type=str, help="define version to query")
-  arg_parser.add_argument('-p', '--project', type=str, help="project name (default = i2)")
-  arg_parser.add_argument('-l', '--links', action='store_true', help="add urls to issues")
-  arg_parser.add_argument('-H', '--html', action='store_true', help="print html output (defaults to markdown)")
-  arg_parser.add_argument('--config', type=str, help='path to changelog config (default changelog.cfg)')
-  arg_parser.add_argument('--print', dest='verbose', action='store_true', help="also print changelog (old behaviour)")
+def apply_config(section):
+  try:
+    type = section['type']
+  except:
+    print "Invalid config"
+    exit(1)
 
-  args = arg_parser.parse_args(sys.argv[1:])
+  if type == 'version':
+    regx = re.compile(section['regex'][1:-1])
+    update_version(section['path'], regx)
+  elif type == 'changelog':
+    marker = '' if not 'marker' in section else section['marker']
+    update_changelog(section['path'], marker)
 
-  project = "i2" if not args.project else args.project
-  ftype = "md" if not args.html else "html"
+def update_version(file, regex):
+  done = False
+  output = ''
+  with open(file, 'r') as f:
+    for line in f:
+      if not done:
+        result = re.match(regex, line)
+      if result:
+        line = line.replace(result.group(1), args.version)
+        found = True
+      output += line
+    f.close()
 
+  rename(file, file + '.old')
+
+  with open(file,'w') as f:
+    f.write(output)
+    f.close()
+
+def update_changelog(file, marker):
+  if marker == '':
+    rename(file, file + '.old')
+    with open(file, 'w') as f:
+      f.write(changelog)
+      f.close()
+      return
+
+  return
+
+def CreateSectionDict(section, config):
+  config_section = {}
+  section_options = config.options(section)
+
+  for option in section_options:
+    try:
+      config_section[option] = config.get(section, option)
+    except:
+      print "Failure on %s" % option
+      config_section[option] = None
+
+  return config_section
+
+def CreateChangelog():
   version_name = args.version
-
   rsp = urllib2.urlopen("https://dev.icinga.org/projects/%s/versions.json" % (project))
   versions_data = json.loads(rsp.read())
 
@@ -139,6 +197,26 @@ def main():
       if args.html:
         changelog += "</ul>\n"
     changelog += '\n'
+
+  return changelog
+
+changelog = CreateChangelog()
+
+def main():
+  config = ConfigParser.SafeConfigParser()
+  try:
+    config.readfp(open('data.cfg'))
+  except:
+    print "Could not read config!"
+    exit(1)
+
+  config_dict = {}
+  for i in config.sections():
+    config_dict[i] = CreateSectionDict(i, config)
+    apply_config(config_dict[i])
+    if not "path" in config_dict[i] or not "type" in config_dict[i]:
+      print 'All sections require "path" and "type" information'
+      return 1
 
   if args.verbose:
     print changelog
