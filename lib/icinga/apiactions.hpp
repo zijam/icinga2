@@ -74,6 +74,13 @@ public:
 	static Dictionary::Ptr ApiActions::StartExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
 	static Dictionary::Ptr ApiActions::StopExecutingHostChecks(const DynamicObject::Ptr& object, const Dictionary::Ptr& params); */
 
+/*
+	static Dictionary::Ptr ApiActions::ShutdownProcess(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::RestartProcess(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	static Dictionary::Ptr ApiActions::ProcessFile(const DynamicObject::Ptr& object, const Dictionary::Ptr& params);
+	*/
+
+
 private:
 	static Dictionary::Ptr CreateResult(int code, const String& status);
 };

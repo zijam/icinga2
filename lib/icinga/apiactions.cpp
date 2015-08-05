@@ -75,6 +75,12 @@ REGISTER_APIACTION(start_executing_host_checks, "", &ApiActions::StartExecutingH
 REGISTER_APIACTION(stop_executing_host_checks, "", &ApiActions::StopExecutingHostChecks);
 */
 
+/*
+REGISTER_APIACTION(shutdown_process, "", &ApiActions::ShutdownProcess);
+REGISTER_APIACTION(restart_process, "", &ApiActions::RestartProcess);
+REGISTER_APIACTION(process_file, "", &ApiActions::ProcessFile);
+*/
+
 Dictionary::Ptr ApiActions::CreateResult(int code, const String& status)
 {
 	Dictionary::Ptr result = new Dictionary();
@@ -193,7 +199,7 @@ Dictionary::Ptr ApiActions::EnableActiveChecks(const DynamicObject::Ptr& object,
 
 	if (!host)
 		return ApiActions::CreateResult(404, "Cannot enable checks for non-existent object");
-	
+
 	BOOST_FOREACH(const Service::Ptr& service, host->GetServices()) {
 		service->SetEnableActiveChecks(true);
 	}
@@ -207,7 +213,7 @@ Dictionary::Ptr ApiActions::DisableActiveChecks(const DynamicObject::Ptr& object
 
 	if (!host)
 		return ApiActions::CreateResult(404, "Cannot enable checks for non-existent object");
-	
+
 	BOOST_FOREACH(const Service::Ptr& service, host->GetServices()) {
 		service->SetEnableActiveChecks(false);
 	}
@@ -224,7 +230,7 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 
 	if (!params->Contains("author") || !params->Contains("comment"))
 		return ApiActions::CreateResult(403, "Acknowledgements require an author and a comment");
-	
+
 	AcknowledgementType sticky = AcknowledgementNormal;
 	bool notify = false;
 	double timestamp = 0;
@@ -249,7 +255,7 @@ Dictionary::Ptr ApiActions::AcknowledgeProblem(const DynamicObject::Ptr& object,
 
 	checkable->AddComment(CommentAcknowledgement, HttpUtility::GetLastParameter(params, "author"),
 	    HttpUtility::GetLastParameter(params, "comment"), timestamp);
-	checkable->AcknowledgeProblem(HttpUtility::GetLastParameter(params, "author"), 
+	checkable->AcknowledgeProblem(HttpUtility::GetLastParameter(params, "author"),
 	    HttpUtility::GetLastParameter(params, "comment"), sticky, notify, timestamp);
 	return ApiActions::CreateResult(200, "Successfully acknowledged problem for " +  checkable->GetName());
 }
@@ -263,7 +269,7 @@ Dictionary::Ptr ApiActions::RemoveAcknowledgement(const DynamicObject::Ptr& obje
 
 	checkable->ClearAcknowledgement();
 	checkable->RemoveCommentsByType(CommentAcknowledgement);
-	
+
 	return ApiActions::CreateResult(200, "Successfully removed acknowledgement for " + checkable->GetName());
 }
 
@@ -294,7 +300,7 @@ Dictionary::Ptr ApiActions::RemoveComment(const DynamicObject::Ptr& object, cons
 
 	String rid = Service::GetCommentIDFromLegacyID(comment_id);
 	Service::RemoveComment(rid);
-	
+
 	return ApiActions::CreateResult(200, "Successfully removed comment " + comment_id);
 }
 */
@@ -360,7 +366,7 @@ Dictionary::Ptr ApiActions::ScheduleDowntime(const DynamicObject::Ptr& object, c
 		!params->Contains("author") || !params->Contains("comment"))
 		return ApiActions::CreateResult(404, "Options 'start_time', 'end_time', 'duration', 'author' and 'comment' are required");
 	//Duration from end_time - start_time ?
-	
+
 	bool fixd = false;
 	if (params->Contains("fixed"))
 		fixd = HttpUtility::GetLastParameter(params, "fixed");
@@ -411,7 +417,7 @@ Dictionary::Ptr ApiActions::RemoveDowntime(const DynamicObject::Ptr& object, con
 
 	String rid = Service::GetDowntimeIDFromLegacyID(downtime_id);
 	Service::RemoveDowntime(rid);
-	
+
 	return ApiActions::CreateResult(200, "Successfully removed downtime " + downtime_id);
 }
 */
@@ -509,12 +515,12 @@ Dictionary::Ptr ApiActions::ChangeEventHandler(const DynamicObject::Ptr& object,
 		return ApiActions::CreateResult(404, "Cannot change event handler of a non-existent object");
 
    /* empty command string implicitely disables event handler */
-    if (!params->Contains("event_command_name"))
-        checkable->SetEnableEventHandler(false);
+	if (!params->Contains("event_command_name"))
+		checkable->SetEnableEventHandler(false);
 	else {
 		String event_name = HttpUtility::GetLastParameter(params, "event_command_name");
 
-        EventCommand::Ptr command = EventCommand::GetByName(event_name);
+		EventCommand::Ptr command = EventCommand::GetByName(event_name);
 
 		if (!command)
 			return ApiActions::CreateResult(404, "Event command '" + event_name + "' does not exist");
@@ -522,7 +528,7 @@ Dictionary::Ptr ApiActions::ChangeEventHandler(const DynamicObject::Ptr& object,
 		checkable->SetEventCommand(command);
 
 		return ApiActions::CreateResult(200, "Successfully changed event command for " + checkable->GetName());
-    }    
+	}
 }
 
 Dictionary::Ptr ApiActions::ChangeCheckCommand(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
@@ -608,3 +614,55 @@ Dictionary::Ptr ApiActions::ChangeRetryInterval(const DynamicObject::Ptr& object
 
 	return ApiActions::CreateResult(200, "Successfully changed the retry interval for " + checkable->GetName());
 }
+
+/*
+Dictionary::Ptr ApiActions::RestartProcess(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Application::RequestShutdown();
+
+	return ApiActions::CreateResult(200, "I don't exist!");
+}
+
+Dictionary::Ptr ApiActions::RestartProcess(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	Application::RequestRestart();
+
+	return ApiActions::CreateResult(200, "That's not how this works");
+}
+
+Dictionary::Ptr ApiActions::ProcessFile(const DynamicObject::Ptr& object, const Dictionary::Ptr& params)
+{
+	if (!params->Contains("file_name")
+		return ApiActions::CreateResult(403, "Parameter 'file_name' is required");
+
+	String file = HttpUtility::GetLastParameter(params, "file_name")
+
+	bool del = true;
+	if (!params->Contains("delete") || !HttpUtility::GetLastParameter(params, "delete"))
+		del = false;
+
+	std::ifstream ifp;
+	ifp.exceptions(std::ifstream::badbit);
+
+	ifp.open(file.CStr(), std::ifstream::in);
+
+	while (ifp.good()) {
+		std::string line;
+		std::getline(ifp, line);
+
+		try {
+			Execute(line);
+		} catch (const std::exception& ex) {
+			ifp.close();
+			return ApiActions::CreateResult(500, "Command execution failed");
+		}
+	}
+
+	ifp.close();
+
+	if (del)
+		(void) unlink(file.CStr());
+
+	return ApiActions::CreateResult(200, "Successfully processed " + (del?"and deleted ":"") + "file " + file);
+}
+*/
