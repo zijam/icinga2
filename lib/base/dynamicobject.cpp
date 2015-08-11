@@ -98,21 +98,31 @@ void DynamicObject::ClearExtension(const String& key)
 void DynamicObject::ModifyAttribute(const String& attr, const Value& value)
 {
 	Dictionary::Ptr original_attributes = GetOriginalAttributes();
+	bool updated_original_attributes = false;
 
-	if (!original_attributes) {
-		original_attributes = new Dictionary();
-		SetOriginalAttributes(original_attributes);
+	Type::Ptr type = GetReflectionType();
+	int fid = type->GetFieldId(attr);
+	Field field = type->GetFieldInfo(fid);
+
+	if (field.Attributes & FAConfig) {
+		if (!original_attributes) {
+			original_attributes = new Dictionary();
+			SetOriginalAttributes(original_attributes, true);
+		}
+
+		Value attrVal = GetField(fid);
+
+		if (!original_attributes->Contains(attr)) {
+			updated_original_attributes = true;
+			original_attributes->Set(attr, attrVal);
+		}
 	}
 
-	int field = GetReflectionType()->GetFieldId(attr);
-
-	Value attrVal = GetField(field);
-
-	if (!original_attributes->Contains(attr))
-		original_attributes->Set(attr, attrVal);
-
-	SetField(field, value);
 	//TODO: validation, vars.os
+	SetField(fid, value, true);
+
+	if (updated_original_attributes)
+		NotifyOriginalAttributes();
 }
 
 void DynamicObject::RestoreAttribute(const String& attr)
