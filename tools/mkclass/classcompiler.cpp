@@ -704,9 +704,14 @@ void ClassCompiler::HandleClass(const Klass& klass, const ClassDebugInfo&)
 
 			m_Impl << "void ObjectImpl<" << klass.Name << ">::Notify" << it->GetFriendlyName() << "(const Value& cookie)" << std::endl
 			       << "{" << std::endl
-			       << "\t" << "DynamicObject *dobj = dynamic_cast<DynamicObject *>(this);" << std::endl
-			       << "\t" << "if (!dobj || dobj->IsActive())" << std::endl
-			       << "\t\t" << "On" << it->GetFriendlyName() << "Changed(static_cast<" << klass.Name << " *>(this), cookie);" << std::endl
+			       << "\t" << "DynamicObject *dobj = dynamic_cast<DynamicObject *>(this);" << std::endl;
+
+			if (it->Name != "active") {
+				m_Impl << "\t" << "if (!dobj || dobj->IsActive())" << std::endl
+				       << "\t";
+			}
+
+			m_Impl << "On" << it->GetFriendlyName() << "Changed(static_cast<" << klass.Name << " *>(this), cookie);" << std::endl
 			       << "}" << std::endl << std::endl;
 		}
 		
