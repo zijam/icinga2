@@ -55,6 +55,7 @@ public:
 
 	void ModifyAttribute(const String& attr, const Value& value);
 	void RestoreAttribute(const String& attr);
+	bool IsAttributeModified(const String& attr) const;
 
 	void Register(void);
 

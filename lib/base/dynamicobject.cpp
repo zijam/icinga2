@@ -119,7 +119,7 @@ void DynamicObject::ModifyAttribute(const String& attr, const Value& value)
 	}
 
 	//TODO: validation, vars.os
-	SetField(fid, value, true);
+	SetField(fid, value);
 
 	if (updated_original_attributes)
 		NotifyOriginalAttributes();
@@ -136,6 +136,16 @@ void DynamicObject::RestoreAttribute(const String& attr)
 
 	SetField(GetReflectionType()->GetFieldId(attr), attrVal);
 	original_attributes->Remove(attr);
+}
+
+bool DynamicObject::IsAttributeModified(const String& attr) const
+{
+	Dictionary::Ptr original_attributes = GetOriginalAttributes();
+
+	if (!original_attributes)
+		return false;
+
+	return original_attributes->Contains(attr);
 }
 
 void DynamicObject::Register(void)
